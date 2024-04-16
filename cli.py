@@ -76,8 +76,8 @@ login_error = True
 while login_error:
     try:
         if os.getenv("EMAIL") and os.getenv("PASSWORD"):
-            print(os.getenv("EMAIL")
-            print(os.getenv("PASSWORD")    
+            print(os.getenv("EMAIL"))
+            print(os.getenv("PASSWORD"))
             email, password = os.getenv("EMAIL"), os.getenv("PASSWORD")
         else:
             email = input("Email: ")
