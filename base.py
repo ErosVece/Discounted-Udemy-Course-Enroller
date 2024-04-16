@@ -11,11 +11,15 @@ from urllib.parse import parse_qs, unquote, urlparse, urlsplit
 import browser_cookie3
 import cloudscraper
 import requests
+import requests_cache
 from bs4 import BeautifulSoup as bs
 
 from colors import *
 
 VERSION = "v2.1"
+
+cached_session = requests_cache.CachedSession(expire_after=21600)
+cached_session.cache.delete(expired=True)
 
 scraper_dict: dict = {
     "Udemy Freebies": "uf",
@@ -95,7 +99,7 @@ class Scraper:
             }
 
             for page in range(1, 3):
-                r = requests.get(
+                r = cached_session.get(
                     "https://www.discudemy.com/all/" + str(page), headers=head
                 )
                 soup = bs(r.content, "html5lib")
@@ -106,7 +110,7 @@ class Scraper:
                 self.du_progress = index
                 title = item.string
                 url = item["href"].split("/")[-1]
-                r = requests.get("https://www.discudemy.com/go/" + url, headers=head)
+                r = cached_session.get("https://www.discudemy.com/go/" + url, headers=head)
                 soup = bs(r.content, "html5lib")
                 self.du_links.append(
                     title + "|:|" + soup.find("a", text=re.compile(r"https://www\.udemy\.com/course")).string
@@ -122,7 +126,7 @@ class Scraper:
             big_all = []
 
             for page in range(1, 3):
-                r = requests.get(
+                r = cached_session.get(
                     "https://www.udemyfreebies.com/free-udemy-courses/" + str(page)
                 )
                 soup = bs(r.content, "html5lib")
@@ -134,7 +138,7 @@ class Scraper:
             for index, item in enumerate(big_all):
                 self.uf_progress = index
                 title = item.img["alt"]
-                link = requests.get(
+                link = cached_session.get(
                     "https://www.udemyfreebies.com/out/" + item["href"].split("/")[4]
                 ).url
                 self.uf_links.append(title + "|:|" + link)
@@ -149,7 +153,7 @@ class Scraper:
             big_all = []
 
             for page in range(1, 4):
-                r = requests.get(
+                r = cached_session.get(
                     "https://www.tutorialbar.com/all-courses/page/" + str(page)
                 )
                 soup = bs(r.content, "html5lib")
@@ -186,13 +190,13 @@ class Scraper:
                 "Connection": "Keep-Alive",
             }
             try:
-                r = requests.get(
+                r = cached_session.get(
                     "https://www.real.discount/api-web/all-courses/?store=Udemy&page=1&per_page=40&orderby=date&free=1&editorschoices=0",
                     headers=headers,
                     timeout=5,
                 ).json()
             except requests.exceptions.ConnectTimeout:
-                r = requests.get(
+                r = cached_session.get(
                     "https://www.real.discount/api-web/all-courses/?store=Udemy&page=1&per_page=40&orderby=date&free=1&editorschoices=0",
                     headers=headers,
                     timeout=5,
@@ -220,7 +224,7 @@ class Scraper:
 
     def cv(self):
         try:
-            r = requests.get("https://coursevania.com/courses/")
+            r = cached_session.get("https://coursevania.com/courses/")
             soup = bs(r.content, "html5lib")
             nonce = json.loads(
                 [
@@ -230,7 +234,7 @@ class Scraper:
                 ][0].strip("_mlv =	norsecat;\n")
             )["load_content"]
 
-            r = requests.get(
+            r = cached_session.get(
                 "https://coursevania.com/wp-admin/admin-ajax.php?&template=courses/grid&args={%22posts_per_page%22:%2230%22}&action=stm_lms_load_content&nonce="
                 + nonce
                 + "&sort=date_high"
@@ -244,7 +248,7 @@ class Scraper:
             for index, item in enumerate(small_all):
                 self.cv_progress = index
                 title = item.h5.string
-                r = requests.get(item.a["href"])
+                r = cached_session.get(item.a["href"])
                 soup = bs(r.content, "html5lib")
                 self.cv_links.append(
                     title
@@ -276,7 +280,7 @@ class Scraper:
             for index, item in enumerate(big_all):
                 self.idc_progress = index
                 title = item["aria-label"][5:][:-1].strip()
-                r = requests.get(item["href"], allow_redirects=False)
+                r = cached_session.get(item["href"], allow_redirects=False)
                 link = unquote(r.headers["Location"])
                 parsed_link = urlparse(link)
                 if parsed_link.netloc == "click.linksynergy.com":
@@ -291,7 +295,7 @@ class Scraper:
 
     def en(self):
         try:
-            r = requests.get(
+            r = cached_session.get(
                 "https://jobs.e-next.in/public/assets/data/udemy.json"
             ).json()
             big_all = r[0:50]
@@ -713,6 +717,12 @@ class Udemy:
             self.txt_file.flush()
             os.fsync(self.txt_file.fileno())
 
+    def save_excluded_course(self, combo):  #### NOTE Pending
+        if self.settings["save_txt"]:
+            self.excluded_txt.write(combo + "\n")
+            self.excluded_txt.flush()
+            os.fsync(self.excluded_txt.fileno())
+
     def enrol(self):
 
         self.remove_duplicates()
@@ -730,6 +740,11 @@ class Udemy:
                 os.makedirs("Courses/")
             self.txt_file = open(
                 f"Courses/" + time.strftime("%Y-%m-%d--%H-%M") + ".txt",
+                "w",
+                encoding="utf-8",
+            )
+            self.excluded_txt = open(
+                f"Courses/Excluded " + time.strftime("%Y-%m-%d--%H-%M") + ".txt",
                 "w",
                 encoding="utf-8",
             )
@@ -800,6 +815,7 @@ class Udemy:
                             #     e_c += 1
                         else:
                             self.excluded_c += 1
+                            self.save_excluded_course(combo)
                     elif coupon_id and not coupon_valid:
                         self.print(":( Coupon Expired\n", color="red")
                         self.expired_c += 1

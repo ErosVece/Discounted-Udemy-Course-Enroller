@@ -1,0 +1,59 @@
+{
+    "stay_logged_in": {
+        "auto": false,
+        "manual": true
+    },
+    "min_rating": 0.0,
+    "title_exclude": [],
+    "instructor_exclude": [],
+    "languages": {
+        "Arabic": false,
+        "Chinese": false,
+        "Dutch": true,
+        "English": true,
+        "French": false,
+        "German": false,
+        "Hindi": false,
+        "Indonesian": false,
+        "Italian": false,
+        "Japanese": false,
+        "Korean": false,
+        "Nepali": false,
+        "Polish": false,
+        "Portuguese": false,
+        "Romanian": false,
+        "Russian": false,
+        "Spanish": false,
+        "Thai": false,
+        "Turkish": false,
+        "Urdu": false
+    },
+    "categories": {
+        "Business": false,
+        "Design": true,
+        "Development": true,
+        "Finance & Accounting": false,
+        "Health & Fitness": false,
+        "IT & Software": true,
+        "Lifestyle": false,
+        "Marketing": false,
+        "Music": true,
+        "Office Productivity": false,
+        "Personal Development": false,
+        "Photography & Video": true,
+        "Teaching & Academics": false
+    },
+    "sites": {
+        "Discudemy": true,
+        "Udemy Freebies": true,
+        "Tutorial Bar": true,
+        "Real Discount": true,
+        "Course Vania": true,
+        "IDownloadCoupons": true,
+        "E-next": true
+    },
+    "email": "xxx",
+    "password": "xxx",
+    "save_txt": true,
+    "discounted_only": false
+}
